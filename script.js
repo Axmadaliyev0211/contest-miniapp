@@ -33,7 +33,7 @@ async function init() {
     
     // Get parameters from URL
     contestId = getUrlParameter('contest_id');
-    const participantsParam = getUrlParameter('participants');
+    const participantsDataParam = getUrlParameter('participants_data');
     const winnersParam = getUrlParameter('winners');
     
     if (!contestId) {
@@ -41,52 +41,40 @@ async function init() {
         return;
     }
     
-    // Parse parameters
-    const participantsCount = parseInt(participantsParam) || 0;
+    // Parse winners count
     winnersCount = parseInt(winnersParam) || 1;
     
-    if (participantsCount < 2) {
+    // Parse participants data (JSON)
+    if (participantsDataParam) {
+        try {
+            const decoded = decodeURIComponent(participantsDataParam);
+            participants = JSON.parse(decoded);
+            
+            if (!Array.isArray(participants) || participants.length === 0) {
+                showError('Ishtirokchilar topilmadi!');
+                return;
+            }
+        } catch (error) {
+            console.error('Participants data parse error:', error);
+            showError('Ishtirokchilar ma\'lumotlarini yuklashda xatolik!');
+            return;
+        }
+    } else {
+        showError('Ishtirokchilar ma\'lumotlari topilmadi!');
+        return;
+    }
+    
+    // Check minimum participants
+    if (participants.length < 2) {
         showError('Ishtirokchilar soni juda kam! Kamida 2 ta ishtirokchi bo\'lishi kerak.');
         return;
     }
     
-    // Generate mock participants for display
-    participants = generateMockParticipants(participantsCount);
-    
     // Update UI
-    document.getElementById('participants-count').textContent = participantsCount;
+    document.getElementById('participants-count').textContent = participants.length;
     document.getElementById('winners-count').textContent = winnersCount;
     
     showLoading(false);
-}
-
-function generateMockParticipants(count) {
-    // Generate mock participant list for UI display
-    // Real participant data comes from bot backend
-    // This is just for spinning animation
-    
-    const names = [
-        'Ali Valiyev', 'Aziza Karimova', 'Bobur Toshmatov', 'Dilnoza Ergasheva',
-        'Eldor Rahimov', 'Feruza Hasanova', 'G\'olibjon Saidov', 'Hulkar Yusupova',
-        'Ilhom Abdullayev', 'Jahongir Muhammadov', 'Kamola Sharipova', 'Laziz Ismoilov',
-        'Madina Turgunova', 'Nodira Qodirova', 'Otabek Salomov', 'Parvina Nazarova',
-        'Rustam Ahmadov', 'Sevara Mirzayeva', 'Timur Oripov', 'Umida Jalilova'
-    ];
-    
-    const result = [];
-    for (let i = 0; i < count; i++) {
-        const name = names[i % names.length];
-        result.push({
-            user_id: 1000000 + i,
-            first_name: name.split(' ')[0],
-            last_name: name.split(' ')[1],
-            username: 'user' + (i + 1)
-        });
-    }
-    
-    return result;
-}
-
 // ==================== SPIN LOGIC ====================
 
 async function startSpin() {
