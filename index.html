@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>🎰 G'olib tanlash</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1 class="title">🎰 G'oliblarni tanlash</h1>
+            <div class="contest-info">
+                <div class="info-item">
+                    <span class="label">👥 Ishtirokchilar:</span>
+                    <span class="value" id="participants-count">0</span>
+                </div>
+                <div class="info-item">
+                    <span class="label">🏆 G'oliblar:</span>
+                    <span class="value" id="winners-count">0</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Spin Zone -->
+            <div class="spin-zone" id="spinZone">
+                <div class="spin-container">
+                    <div class="spin-text" id="spinText">
+                        Tayyor
+                    </div>
+                    <div class="winner-display" id="winnerDisplay" style="display: none;">
+                        <div class="winner-emoji">🎉</div>
+                        <div class="winner-name" id="winnerName"></div>
+                        <div class="winner-position" id="winnerPosition"></div>
+                    </div>
+                </div>
+                
+                <!-- Confetti Container -->
+                <div class="confetti-container" id="confettiContainer"></div>
+            </div>
+
+            <!-- Winners List -->
+            <div class="winners-list" id="winnersList" style="display: none;">
+                <h3>🏆 Tanlangan g'oliblar:</h3>
+                <div class="winners-items" id="winnersItems"></div>
+            </div>
+
+            <!-- Loading -->
+            <div class="loading" id="loading" style="display: none;">
+                <div class="spinner"></div>
+                <p>Yuklanmoqda...</p>
+            </div>
+
+            <!-- Error -->
+            <div class="error" id="error" style="display: none;">
+                <div class="error-icon">❌</div>
+                <p id="errorMessage"></p>
+            </div>
+        </div>
+
+        <!-- Controls -->
+        <div class="controls">
+            <button class="btn btn-primary" id="spinBtn" onclick="startSpin()">
+                🎰 Aylantirish
+            </button>
+            <button class="btn btn-success" id="confirmBtn" onclick="confirmWinners()" style="display: none;">
+                ✅ Tasdiqlash
+            </button>
+            <button class="btn btn-secondary" id="resetBtn" onclick="resetSelection()" style="display: none;">
+                🔄 Qayta tanlash
+            </button>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
