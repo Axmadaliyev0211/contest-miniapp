@@ -31,50 +31,53 @@ function getUrlParameter(name) {
 async function init() {
     showLoading(true);
     
-    // Get parameters from URL
-    contestId = getUrlParameter('contest_id');
-    const participantsDataParam = getUrlParameter('participants_data');
-    const winnersParam = getUrlParameter('winners');
-    
-    if (!contestId) {
-        showError('Konkurs ID topilmadi!');
-        return;
-    }
-    
-    // Parse winners count
-    winnersCount = parseInt(winnersParam) || 1;
-    
-    // Parse participants data (JSON)
-    if (participantsDataParam) {
-        try {
-            const decoded = decodeURIComponent(participantsDataParam);
-            participants = JSON.parse(decoded);
-            
-            if (!Array.isArray(participants) || participants.length === 0) {
-                showError('Ishtirokchilar topilmadi!');
-                return;
-            }
-        } catch (error) {
-            console.error('Participants data parse error:', error);
-            showError('Ishtirokchilar ma\'lumotlarini yuklashda xatolik!');
+    try {
+        // Get data from URL fragment (after #)
+        const fragment = window.location.hash.substring(1); // Remove #
+        
+        if (!fragment) {
+            showError('Ma\'lumotlar topilmadi!');
             return;
         }
-    } else {
-        showError('Ishtirokchilar ma\'lumotlari topilmadi!');
-        return;
+        
+        // Decode base64
+        const decoded = atob(fragment);
+        const data = JSON.parse(decoded);
+        
+        // Extract data
+        contestId = data.contest_id;
+        participants = data.participants || [];
+        winnersCount = data.winners_count || 1;
+        
+        // Validate
+        if (!contestId) {
+            showError('Konkurs ID topilmadi!');
+            return;
+        }
+        
+        if (!Array.isArray(participants) || participants.length < 2) {
+            showError('Ishtirokchilar topilmadi yoki soni juda kam!');
+            return;
+        }
+        
+        // Update UI
+        document.getElementById('participants-count').textContent = participants.length;
+        document.getElementById('winners-count').textContent = winnersCount;
+        
+        console.log('Ma\'lumotlar yuklandi:', {
+            contestId,
+            participantsCount: participants.length,
+            winnersCount
+        });
+        
+        showLoading(false);
+        
+    } catch (error) {
+        console.error('Init error:', error);
+        showError('Ma\'lumotlarni yuklashda xatolik: ' + error.message);
     }
-    
-    // Check minimum participants
-    if (participants.length < 2) {
-        showError('Ishtirokchilar soni juda kam! Kamida 2 ta ishtirokchi bo\'lishi kerak.');
-        return;
-    }
-    
-    // Update UI
-    document.getElementById('participants-count').textContent = participants.length;
-    document.getElementById('winners-count').textContent = winnersCount;
-    
-    showLoading(false);
+}
+
 // ==================== SPIN LOGIC ====================
 
 async function startSpin() {
@@ -110,7 +113,7 @@ async function startSpin() {
         return;
     }
     
-    // Spinning animation - show random names rapidly
+    // Spinning animation - show random indices rapidly
     const spinDuration = 3000; // 3 seconds
     const spinInterval = 100; // Change every 100ms
     const spinCount = spinDuration / spinInterval;
@@ -151,12 +154,15 @@ async function startSpin() {
     const emoji = getPositionEmoji(position);
     
     document.getElementById('winnerDisplay').querySelector('.winner-emoji').textContent = emoji;
-    document.getElementById('winnerName').textContent = getParticipantDisplay(winner);
+    document.getElementById('winnerName').textContent = winner.display;
     document.getElementById('winnerPosition').textContent = `${position}-o'rin`;
     
     // Add to selected winners
     selectedWinners.push({
-        ...winner,
+        user_id: winner.user_id,
+        first_name: winner.first_name,
+        last_name: winner.last_name,
+        username: winner.username,
         position: position
     });
     
@@ -246,9 +252,9 @@ function confirmWinners() {
     
     if (!confirmed) return;
     
-    // Send winners to bot
-    const winnerIds = selectedWinners.map(w => w.user_id).join(',');
-    const message = `WINNERS:${contestId}:${winnerIds}`;
+    // Send winner indices to bot
+    const winnerIndices = selectedWinners.map(w => w.index).join(',');
+    const message = `WINNERS:${contestId}:${winnerIndices}`;
     
     // Send to bot via Telegram WebApp
     tg.sendData(message);
