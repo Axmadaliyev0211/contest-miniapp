@@ -239,15 +239,19 @@ async function startSpin() {
     updateWinnersList();
     
     // Show controls
-    document.getElementById('confirmBtn').style.display = 'block';
     document.getElementById('resetBtn').style.display = 'block';
     
     // Re-enable spin button if not all winners selected
     if (selectedWinners.length < winnersCount) {
         document.getElementById('spinBtn').disabled = false;
         document.getElementById('spinBtn').innerHTML = '🎰 Keyingisini tanlash';
+        // Tasdiqlash tugmasini yashirish
+        document.getElementById('confirmBtn').style.display = 'none';
     } else {
+        // Barcha g'oliblar tanlandi
         document.getElementById('spinBtn').style.display = 'none';
+        // Tasdiqlash tugmasini ko'rsatish
+        document.getElementById('confirmBtn').style.display = 'block';
     }
     
     isSpinning = false;
