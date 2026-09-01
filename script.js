@@ -305,6 +305,66 @@ function updateWinnersList() {
 
 // ==================== CONFIRM WINNERS ====================
 
+function showMessageToCopy(message) {
+    // Hide all other content
+    document.querySelector('.main-content').style.display = 'none';
+    document.querySelector('.controls').style.display = 'none';
+    
+    // Create copy screen
+    const container = document.querySelector('.container');
+    const copyScreen = document.createElement('div');
+    copyScreen.style.cssText = 'padding: 30px; text-align: center; background: white; border-radius: 15px; margin: 20px;';
+    
+    copyScreen.innerHTML = `
+        <div style="font-size: 48px; margin-bottom: 20px;">✅</div>
+        <h2 style="color: #4CAF50; margin-bottom: 15px;">G'oliblar tanlandi!</h2>
+        <p style="margin-bottom: 20px; color: #666;">Quyidagi xabarni nusxalab, botga yuboring:</p>
+        
+        <div style="background: #f5f5f5; padding: 15px; border-radius: 8px; margin: 20px 0; word-break: break-all; font-family: monospace; font-size: 14px; border: 2px dashed #4CAF50;">
+            ${message}
+        </div>
+        
+        <button id="copyBtn" onclick="copyMessage('${message}')" 
+                style="padding: 15px 30px; background: #4CAF50; color: white; border: none; border-radius: 8px; font-size: 18px; cursor: pointer; margin: 10px;">
+            📋 Nusxalash
+        </button>
+        
+        <button onclick="tg.close()" 
+                style="padding: 15px 30px; background: #666; color: white; border: none; border-radius: 8px; font-size: 18px; cursor: pointer; margin: 10px;">
+            ❌ Yopish
+        </button>
+        
+        <p style="margin-top: 20px; font-size: 13px; color: #999;">
+            💡 Xabarni nusxalab, botga yuboring. Bot avtomatik ishlov beradi.
+        </p>
+    `;
+    
+    container.appendChild(copyScreen);
+}
+
+function copyMessage(message) {
+    if (navigator.clipboard) {
+        navigator.clipboard.writeText(message).then(() => {
+            const btn = document.getElementById('copyBtn');
+            btn.textContent = '✅ Nusxalandi!';
+            btn.style.background = '#2196F3';
+            
+            setTimeout(() => {
+                btn.textContent = '📋 Nusxalash';
+                btn.style.background = '#4CAF50';
+            }, 2000);
+            
+            // Show instruction
+            alert('✅ Xabar nusxalandi!\n\nEndi botga yuboring.');
+        }).catch((err) => {
+            alert('❌ Nusxalashda xatolik: ' + err.message);
+        });
+    } else {
+        // Fallback
+        prompt('Ushbu xabarni nusxalab, botga yuboring:', message);
+    }
+}
+
 function confirmWinners() {
     if (selectedWinners.length === 0) {
         alert('G\'oliblar tanlanmagan!');
@@ -325,45 +385,8 @@ function confirmWinners() {
     console.log('📤 Sending to bot:', message);
     console.log('👥 Selected winners:', selectedWinners);
     
-    // Check if sendData is available
-    if (typeof tg.sendData === 'function') {
-        try {
-            tg.sendData(message);
-            console.log('✅ Data sent via sendData()');
-        } catch (error) {
-            console.error('❌ sendData() failed:', error);
-            
-            // Fallback: prompt user to copy-paste
-            alert('Mini App xabar yuborolmadi.\n\nIltimos, quyidagi xabarni botga yuboring:\n\n' + message);
-            
-            // Copy to clipboard
-            navigator.clipboard.writeText(message).then(() => {
-                alert('✅ Xabar nusxalandi! Botga yuboring.');
-            }).catch(() => {
-                prompt('Ushbu xabarni nusxalab, botga yuboring:', message);
-            });
-        }
-    } else {
-        // No sendData support - show message to copy
-        console.warn('⚠️ sendData() not available');
-        
-        // Copy to clipboard
-        if (navigator.clipboard) {
-            navigator.clipboard.writeText(message).then(() => {
-                alert('✅ G\'oliblar tanlandi!\n\nXabar nusxalandi. Botga yuboring.');
-                tg.close();
-            }).catch(() => {
-                prompt('Ushbu xabarni nusxalab, botga yuboring:', message);
-            });
-        } else {
-            prompt('Ushbu xabarni nusxalab, botga yuboring:', message);
-        }
-    }
-    
-    // Close WebApp after a delay
-    setTimeout(() => {
-        tg.close();
-    }, 1000);
+    // Show message on screen for user to copy
+    showMessageToCopy(message);
 }
 
 // ==================== RESET ====================
