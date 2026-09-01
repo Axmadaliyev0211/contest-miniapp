@@ -322,11 +322,48 @@ function confirmWinners() {
     const winnerUserIds = selectedWinners.map(w => w.user_id).join(',');
     const message = `WINNERS:${contestId}:${winnerUserIds}`;
     
-    // Send to bot via Telegram WebApp
-    tg.sendData(message);
+    console.log('📤 Sending to bot:', message);
+    console.log('👥 Selected winners:', selectedWinners);
     
-    // Close WebApp
-    tg.close();
+    // Check if sendData is available
+    if (typeof tg.sendData === 'function') {
+        try {
+            tg.sendData(message);
+            console.log('✅ Data sent via sendData()');
+        } catch (error) {
+            console.error('❌ sendData() failed:', error);
+            
+            // Fallback: prompt user to copy-paste
+            alert('Mini App xabar yuborolmadi.\n\nIltimos, quyidagi xabarni botga yuboring:\n\n' + message);
+            
+            // Copy to clipboard
+            navigator.clipboard.writeText(message).then(() => {
+                alert('✅ Xabar nusxalandi! Botga yuboring.');
+            }).catch(() => {
+                prompt('Ushbu xabarni nusxalab, botga yuboring:', message);
+            });
+        }
+    } else {
+        // No sendData support - show message to copy
+        console.warn('⚠️ sendData() not available');
+        
+        // Copy to clipboard
+        if (navigator.clipboard) {
+            navigator.clipboard.writeText(message).then(() => {
+                alert('✅ G\'oliblar tanlandi!\n\nXabar nusxalandi. Botga yuboring.');
+                tg.close();
+            }).catch(() => {
+                prompt('Ushbu xabarni nusxalab, botga yuboring:', message);
+            });
+        } else {
+            prompt('Ushbu xabarni nusxalab, botga yuboring:', message);
+        }
+    }
+    
+    // Close WebApp after a delay
+    setTimeout(() => {
+        tg.close();
+    }, 1000);
 }
 
 // ==================== RESET ====================
