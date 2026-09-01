@@ -220,7 +220,7 @@ async function startSpin() {
     const emoji = getPositionEmoji(position);
     
     document.getElementById('winnerDisplay').querySelector('.winner-emoji').textContent = emoji;
-    document.getElementById('winnerName').textContent = winner.display;
+    document.getElementById('winnerName').textContent = getParticipantDisplay(winner);
     document.getElementById('winnerPosition').textContent = `${position}-o'rin`;
     
     // Add to selected winners
@@ -318,9 +318,9 @@ function confirmWinners() {
     
     if (!confirmed) return;
     
-    // Send winner indices to bot
-    const winnerIndices = selectedWinners.map(w => w.index).join(',');
-    const message = `WINNERS:${contestId}:${winnerIndices}`;
+    // Send winner user_ids to bot
+    const winnerUserIds = selectedWinners.map(w => w.user_id).join(',');
+    const message = `WINNERS:${contestId}:${winnerUserIds}`;
     
     // Send to bot via Telegram WebApp
     tg.sendData(message);
