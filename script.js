@@ -32,49 +32,115 @@ async function init() {
     showLoading(true);
     
     try {
-        // Get data from URL fragment (after #)
-        const fragment = window.location.hash.substring(1); // Remove #
+        // Show data input screen
+        showDataInput();
         
-        if (!fragment) {
-            showError('Ma\'lumotlar topilmadi!');
+    } catch (error) {
+        console.error('Init error:', error);
+        showError('Xatolik: ' + error.message);
+    }
+}
+
+function showDataInput() {
+    // Hide loading
+    document.getElementById('loading').style.display = 'none';
+    
+    // Show data input screen
+    const mainContent = document.querySelector('.main-content');
+    mainContent.innerHTML = `
+        <div style="padding: 20px; text-align: center;">
+            <h2>📋 Ma'lumotlarni kiriting</h2>
+            <p style="margin: 20px 0;">Bot yuborgan <code>DATA:...</code> kodini nusxalab bu yerga qo'ying:</p>
+            <textarea id="dataInput" 
+                      style="width: 100%; min-height: 120px; padding: 10px; font-family: monospace; font-size: 12px; border: 2px solid #ddd; border-radius: 8px;"
+                      placeholder="DATA:eyJjIjoxLCJwIjpb..."></textarea>
+            <button onclick="loadData()" 
+                    style="margin-top: 15px; padding: 12px 30px; background: #4CAF50; color: white; border: none; border-radius: 8px; font-size: 16px; cursor: pointer;">
+                ✅ Yuklash
+            </button>
+        </div>
+    `;
+    
+    mainContent.style.display = 'block';
+    document.querySelector('.controls').style.display = 'none';
+}
+
+function loadData() {
+    try {
+        const input = document.getElementById('dataInput').value.trim();
+        
+        if (!input.startsWith('DATA:')) {
+            alert('❌ Noto\'g\'ri format! DATA: bilan boshlanishi kerak.');
             return;
+        }
+        
+        // Extract encoded data
+        const encoded = input.substring(5); // Remove "DATA:"
+        
+        // Add padding if needed
+        let paddedEncoded = encoded;
+        while (paddedEncoded.length % 4 !== 0) {
+            paddedEncoded += '=';
         }
         
         // Decode base64
-        const decoded = atob(fragment);
+        const decoded = atob(paddedEncoded.replace(/-/g, '+').replace(/_/g, '/'));
         const data = JSON.parse(decoded);
         
         // Extract data
-        contestId = data.contest_id;
-        participants = data.participants || [];
-        winnersCount = data.winners_count || 1;
+        contestId = data.c;
+        winnersCount = data.w;
+        
+        // Convert compact format to full format
+        participants = data.p.map(p => ({
+            user_id: p.i,
+            first_name: p.f || 'User',
+            last_name: p.l,
+            username: p.u
+        }));
         
         // Validate
-        if (!contestId) {
-            showError('Konkurs ID topilmadi!');
-            return;
-        }
-        
-        if (!Array.isArray(participants) || participants.length < 2) {
-            showError('Ishtirokchilar topilmadi yoki soni juda kam!');
-            return;
+        if (!contestId || !participants || participants.length < 2) {
+            throw new Error('Ma\'lumotlar to\'liq emas!');
         }
         
         // Update UI
         document.getElementById('participants-count').textContent = participants.length;
         document.getElementById('winners-count').textContent = winnersCount;
         
+        // Show main interface
+        document.querySelector('.main-content').innerHTML = `
+            <div class="spin-zone" id="spinZone">
+                <div class="spin-container">
+                    <div class="spin-text" id="spinText">Tayyor</div>
+                    <div class="winner-display" id="winnerDisplay" style="display: none;">
+                        <div class="winner-emoji">🎉</div>
+                        <div class="winner-name" id="winnerName"></div>
+                        <div class="winner-position" id="winnerPosition"></div>
+                    </div>
+                </div>
+                <div class="confetti-container" id="confettiContainer"></div>
+            </div>
+            <div class="winners-list" id="winnersList" style="display: none;">
+                <h3>🏆 Tanlangan g'oliblar:</h3>
+                <div class="winners-items" id="winnersItems"></div>
+            </div>
+        `;
+        
+        document.querySelector('.controls').style.display = 'flex';
+        
         console.log('Ma\'lumotlar yuklandi:', {
             contestId,
             participantsCount: participants.length,
-            winnersCount
+            winnersCount,
+            participants: participants.slice(0, 3)
         });
         
         showLoading(false);
         
     } catch (error) {
-        console.error('Init error:', error);
-        showError('Ma\'lumotlarni yuklashda xatolik: ' + error.message);
+        console.error('Load data error:', error);
+        alert('❌ Xatolik: ' + error.message + '\n\nIltimos, to\'g\'ri DATA kodni kiriting.');
     }
 }
 
